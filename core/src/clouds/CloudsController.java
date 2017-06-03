@@ -1,5 +1,6 @@
 package clouds;
 
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -7,6 +8,7 @@ import com.badlogic.gdx.utils.Array;
 import java.util.Random;
 
 import helpers.GameInfo;
+import player.Player;
 
 public class CloudsController {
 
@@ -16,6 +18,9 @@ public class CloudsController {
 
     private final float DISTANCE_BETWEEN_CLOUDS = 250f;
     private float minX, maxX;
+    private float lastCloudPositionY;
+
+    private float cameraY;
 
     private Random random = new Random();
 
@@ -24,7 +29,7 @@ public class CloudsController {
         minX = GameInfo.WIDTH / 2f - 110;
         maxX = GameInfo.WIDTH / 2f + 110;
         createClouds();
-        positionClouds();
+        positionClouds(true);
     }
 
     void createClouds() {
@@ -48,42 +53,82 @@ public class CloudsController {
 
     }
 
-    public void positionClouds() {
+    public void positionClouds(boolean firstTimeArranging) {
 
-        while (clouds.get(0).getCloudName().equals("Dark Cloud")){
+        while (clouds.get(0).getCloudName().equals("Dark Cloud")) {
             clouds.shuffle();
         }
 
-        float positionY = GameInfo.HEIGHT / 2;
+        float positionY = 0;
+
+        if(firstTimeArranging){
+            positionY = GameInfo.HEIGHT / 2;
+        } else {
+            positionY = lastCloudPositionY;
+        }
 
         int controlX = 0;
 
         for (Cloud c : clouds) {
 
-            float tempX = 0;
+            if(c.getX() == 0 && c.getY() == 0){
+                float tempX = 0;
 
-            if(controlX == 0){
-                tempX = randomBetweenNumbers(maxX - 60, maxX);
-                controlX = 1;
-            }else if(controlX == 1){
-                tempX = randomBetweenNumbers(minX + 60, minX);
-                controlX = 0;
+                if (controlX == 0) {
+                    tempX = randomBetweenNumbers(maxX - 40, maxX);
+                    controlX = 1;
+                    c.setDrawLeft(false);
+                } else if (controlX == 1) {
+                    tempX = randomBetweenNumbers(minX + 40, minX);
+                    controlX = 0;
+                    c.setDrawLeft(true);
+                }
+
+                c.setSpritePosition(tempX, positionY);
+
+                positionY -= DISTANCE_BETWEEN_CLOUDS;
+                lastCloudPositionY = positionY;
             }
-
-            c.setSpritePosition(tempX, positionY);
-
-            positionY -= DISTANCE_BETWEEN_CLOUDS;
         }
     }
 
-    public void drawClouds(SpriteBatch batch){
-        for(Cloud c : clouds){
-            batch.draw(c, c.getX() - c.getWidth() / 2f,
-                    c.getY() - c.getHeight() / 2f);
+    public void drawClouds(SpriteBatch batch) {
+        for (Cloud c : clouds) {
+           if(c.getDrawLeft()){
+               batch.draw(c, c.getX() - c.getWidth() / 2f - 20,
+                       c.getY() - c.getHeight() / 2f);
+           } else {
+               batch.draw(c, c.getX() - c.getWidth() / 2f + 20,
+                       c.getY() - c.getHeight() / 2f);
+           }
         }
     }
 
-    private float randomBetweenNumbers(float max, float min){
+    public void createAndArrangeNewClouds() {
+        for (int i = 0; i < clouds.size; i++) {
+            if ((clouds.get(i).getY() - GameInfo.HEIGHT / 2 - 15) > cameraY) {
+                clouds.get(i).getTexture().dispose();
+                clouds.removeIndex(i);
+            }
+        }
+
+        if (clouds.size == 4) {
+            createClouds();
+            positionClouds(false);
+        }
+    }
+
+    public void setCameraY(float cameraY) {
+        this.cameraY = cameraY;
+    }
+
+    public Player positionThePlayer(Player player){
+        player = new Player(world, clouds.get(0).getX(),
+                clouds.get(0).getY() + 100);
+        return player;
+    }
+
+    private float randomBetweenNumbers(float max, float min) {
         return random.nextFloat() * (max - min) + min;
     }
 }

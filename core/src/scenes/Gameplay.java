@@ -3,6 +3,7 @@ package scenes;
 
 import com.awesome.jackgiant.GameMain;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -14,9 +15,9 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-import clouds.Cloud;
 import clouds.CloudsController;
 import helpers.GameInfo;
+import player.Player;
 
 public class Gameplay implements Screen{
 
@@ -34,6 +35,8 @@ public class Gameplay implements Screen{
     private float lastYPosition;
 
     private CloudsController cloudsController;
+
+    private Player player;
 
     public Gameplay(GameMain game){
         this.game = game;
@@ -53,15 +56,29 @@ public class Gameplay implements Screen{
 
         world = new World(new Vector2(0, -9.8f), true);
 
-
         cloudsController = new CloudsController(world);
+
+        player = cloudsController.positionThePlayer(player);
 
         createBackgrounds();
     }
 
+    void handleInput(float dt){
+        if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
+            player.movePlayer(-2);
+        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
+            player.movePlayer(2);
+        } else {
+            player.setWalking(false);
+        }
+    }
+
     void update(float dt){
+        handleInput(dt);
         moveCamera();
         checkBackgroundsOutOfBounds();
+        cloudsController.setCameraY(mainCamera.position.y);
+        cloudsController.createAndArrangeNewClouds();
     }
 
     void moveCamera(){
@@ -112,12 +129,19 @@ public class Gameplay implements Screen{
 
         cloudsController.drawClouds(game.getBatch());
 
+        player.drawPlayerIdle(game.getBatch());
+        player.drawPlayerAnimation(game.getBatch());
+
         game.getBatch().end();
 
-//        debugRenderer.render(world, box2DCamera.combined);
+        debugRenderer.render(world, box2DCamera.combined);
 
         game.getBatch().setProjectionMatrix(mainCamera.combined);
         mainCamera.update();
+
+        player.updatePlayer();
+
+        world.step(Gdx.graphics.getDeltaTime(), 6, 2);
     }
 
     @Override
@@ -142,6 +166,11 @@ public class Gameplay implements Screen{
 
     @Override
     public void dispose() {
-
+        world.dispose();
+        for(int i = 0; i < bgs.length; i++){
+            bgs[i].getTexture().dispose();
+        }
+        player.getTexture().dispose();
+        debugRenderer.dispose();
     }
 }

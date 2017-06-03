@@ -54,8 +54,11 @@ public class Player extends Sprite {
         fixtureDef.density = 4f; // this is the mass of the body
         fixtureDef.friction = 2f; // will make player not slido on surfaces
         fixtureDef.shape = shape;
+        fixtureDef.filter.categoryBits = GameInfo.PLAYER;
+        fixtureDef.filter.maskBits = GameInfo.DEFAULT | GameInfo.COLLECTABLE;
 
         Fixture fixture = body.createFixture(fixtureDef);
+        fixture.setUserData("Player");
 
         shape.dispose();
 
@@ -100,8 +103,13 @@ public class Player extends Sprite {
     }
 
     public void updatePlayer() {
-        setPosition(body.getPosition().x * GameInfo.PPM,
-                body.getPosition().y * GameInfo.PPM);
+        if(body.getLinearVelocity().x > 0){
+            setPosition(body.getPosition().x * GameInfo.PPM,
+                    body.getPosition().y * GameInfo.PPM);
+        } else if (body.getLinearVelocity().x < 0){
+            setPosition((body.getPosition().x - 0.3f) * GameInfo.PPM,
+                    body.getPosition().y * GameInfo.PPM);
+        }
     }
 
     public void setWalking(boolean isWalking){

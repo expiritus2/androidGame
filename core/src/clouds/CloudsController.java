@@ -1,12 +1,12 @@
 package clouds;
 
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.Random;
 
+import collectables.Collectable;
 import helpers.GameInfo;
 import player.Player;
 
@@ -15,6 +15,7 @@ public class CloudsController {
     private World world;
 
     private Array<Cloud> clouds = new Array<Cloud>();
+    private Array<Collectable> collectables = new Array<Collectable>();
 
     private final float DISTANCE_BETWEEN_CLOUDS = 250f;
     private float minX, maxX;
@@ -61,7 +62,7 @@ public class CloudsController {
 
         float positionY = 0;
 
-        if(firstTimeArranging){
+        if (firstTimeArranging) {
             positionY = GameInfo.HEIGHT / 2;
         } else {
             positionY = lastCloudPositionY;
@@ -71,7 +72,7 @@ public class CloudsController {
 
         for (Cloud c : clouds) {
 
-            if(c.getX() == 0 && c.getY() == 0){
+            if (c.getX() == 0 && c.getY() == 0) {
                 float tempX = 0;
 
                 if (controlX == 0) {
@@ -88,19 +89,62 @@ public class CloudsController {
 
                 positionY -= DISTANCE_BETWEEN_CLOUDS;
                 lastCloudPositionY = positionY;
+
+                if (!firstTimeArranging && c.getCloudName() != "Dark Cloud") {
+
+                    int rand = random.nextInt(10);
+
+                    if(rand > 5){
+
+                        int randomCollectable = random.nextInt(2);
+
+                        if(randomCollectable == 0){
+                            Collectable collectable = new Collectable(world, "Life");
+                            collectable.setCollectablePosition(c.getX() - 40,
+                                    c.getY() + 40);
+
+                            collectables.add(collectable);
+                        } else {
+                            Collectable collectable = new Collectable(world, "Coin");
+                            collectable.setCollectablePosition(c.getX() - 40,
+                                    c.getY() + 40);
+
+                            collectables.add(collectable);
+                        }
+
+                    }
+
+                }
             }
         }
     }
 
     public void drawClouds(SpriteBatch batch) {
         for (Cloud c : clouds) {
-           if(c.getDrawLeft()){
-               batch.draw(c, c.getX() - c.getWidth() / 2f - 20,
-                       c.getY() - c.getHeight() / 2f);
-           } else {
-               batch.draw(c, c.getX() - c.getWidth() / 2f + 20,
-                       c.getY() - c.getHeight() / 2f);
-           }
+            if (c.getDrawLeft()) {
+                batch.draw(c, c.getX() - c.getWidth() / 2f - 20,
+                        c.getY() - c.getHeight() / 2f);
+            } else {
+                batch.draw(c, c.getX() - c.getWidth() / 2f + 20,
+                        c.getY() - c.getHeight() / 2f);
+            }
+        }
+    }
+
+    public void drawCollectables(SpriteBatch batch) {
+        for (Collectable c : collectables) {
+            c.updateCollectable();
+            batch.draw(c, c.getX(), c.getY());
+        }
+    }
+
+    public void removeCollectables() {
+        for (int i = 0; i < collectables.size; i++) {
+            if (collectables.get(i).getFixture().getUserData() == "Remove") {
+                collectables.get(i).changeFilter();
+                collectables.get(i).getTexture().dispose();
+                collectables.removeIndex(i);
+            }
         }
     }
 
@@ -118,13 +162,22 @@ public class CloudsController {
         }
     }
 
+    public void removeOffScreenCollectables(){
+        for(int i = 0; i < collectables.size; i++){
+            if(collectables.get(i).getY() - GameInfo.HEIGHT / 2f - 15 > cameraY){
+                collectables.get(i).getTexture().dispose();
+                collectables.removeIndex(i);
+            }
+        }
+    }
+
     public void setCameraY(float cameraY) {
         this.cameraY = cameraY;
     }
 
-    public Player positionThePlayer(Player player){
+    public Player positionThePlayer(Player player) {
         player = new Player(world, clouds.get(0).getX(),
-                clouds.get(0).getY() + 100);
+                clouds.get(0).getY() + 78);
         return player;
     }
 

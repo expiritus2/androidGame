@@ -8,6 +8,7 @@ import java.util.Random;
 
 import collectables.Collectable;
 import helpers.GameInfo;
+import helpers.GameManager;
 import player.Player;
 
 public class CloudsController {
@@ -94,16 +95,24 @@ public class CloudsController {
 
                     int rand = random.nextInt(10);
 
-                    if(rand > 5){
+                    if (rand > 5) {
 
                         int randomCollectable = random.nextInt(2);
 
-                        if(randomCollectable == 0){
-                            Collectable collectable = new Collectable(world, "Life");
-                            collectable.setCollectablePosition(c.getX() - 40,
-                                    c.getY() + 40);
+                        if (randomCollectable == 0) {
+                            if (GameManager.getInstance().lifeScore < 2) {
+                                Collectable collectable = new Collectable(world, "Life");
+                                collectable.setCollectablePosition(c.getX() - 40,
+                                        c.getY() + 40);
 
-                            collectables.add(collectable);
+                                collectables.add(collectable);
+                            } else {
+                                Collectable collectable = new Collectable(world, "Coin");
+                                collectable.setCollectablePosition(c.getX() - 40,
+                                        c.getY() + 40);
+
+                                collectables.add(collectable);
+                            }
                         } else {
                             Collectable collectable = new Collectable(world, "Coin");
                             collectable.setCollectablePosition(c.getX() - 40,
@@ -162,9 +171,9 @@ public class CloudsController {
         }
     }
 
-    public void removeOffScreenCollectables(){
-        for(int i = 0; i < collectables.size; i++){
-            if(collectables.get(i).getY() - GameInfo.HEIGHT / 2f - 15 > cameraY){
+    public void removeOffScreenCollectables() {
+        for (int i = 0; i < collectables.size; i++) {
+            if (collectables.get(i).getY() - GameInfo.HEIGHT / 2f - 15 > cameraY) {
                 collectables.get(i).getTexture().dispose();
                 collectables.removeIndex(i);
             }

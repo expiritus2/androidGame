@@ -26,7 +26,7 @@ public class Player extends Sprite {
     private Animation animation;
     private float elapsedTime;
 
-    private boolean isWalking;
+    private boolean isWalking, dead;
 
     public Player(World world, float x, float y) {
         super(new Texture("Player/Player 1.png"));
@@ -34,6 +34,7 @@ public class Player extends Sprite {
         setPosition(x, y);
         createBody();
         playerAtlas = new TextureAtlas("Player Animation/Player Animation.atlas");
+        dead = false;
     }
 
     void createBody() {
@@ -117,6 +118,13 @@ public class Player extends Sprite {
     }
 
 
+    public void setDead(boolean dead){
+        this.dead = dead;
+    }
+
+    public boolean isDead(){
+        return this.dead;
+    }
 }
 
 
